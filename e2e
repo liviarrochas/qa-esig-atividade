@@ -1,0 +1,51 @@
+describe('Testes de Automação QuarkClinic', () => {
+  
+
+  beforeEach(() => {
+    cy.visit('https://agendamento.quarkclinic.com.br/index/363622206');
+  });
+
+
+  it('Fluxo 1: Deve cadastrar um novo usuário com sucesso', () => {
+    
+    
+    const timestamp = Date.now();
+    const nomeUnico = `Candidato Teste ${timestamp}`;
+    const emailUnico = `candidato${timestamp}@teste.com`;
+    const celularUnico = `839${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const cpfUnico = '441.226.540-02'; 
+    const senha = 'Senha@123';
+
+    
+    cy.contains('Login').click();
+    cy.get('#modal-scoped').should('be.visible');
+    cy.get('[data-cy="btn-cadastrar-se"]').should('be.visible').click();
+
+
+    cy.get('input[placeholder="Nome do paciente"]').should('be.visible').type(nomeUnico);
+    cy.get('input[placeholder="(00) 00000-0000"]').type(celularUnico);
+    cy.get('#sexo').select('MASCULINO'); 
+    cy.get('input[placeholder="dd/mm/aaaa"]').type('01-01-1990');
+    cy.get('#email').type(emailUnico);
+    cy.get('#tipodocumento').select('CPF').trigger('change');
+    cy.get('#CPF').should('be.visible').type(cpfUnico);
+    cy.get('#password').type(senha); 
+    cy.get('#passwordConfirmation').type(senha);
+
+    
+    cy.get('input[type="checkbox"]').check({ force: true });
+
+
+    cy.intercept('POST', '**/api/v2/auth/register').as('registerRequest');
+
+    
+    cy.contains('Criar conta').click();
+
+    
+    cy.wait('@registerRequest').its('response.statusCode').should('eq', 201);
+
+    
+    cy.contains(`Seja bem-vindo, ${nomeUnico}`).should('be.visible');
+  });
+
+});
